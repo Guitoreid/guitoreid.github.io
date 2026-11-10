@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Caderneta</title>
-<meta name="description" content="Controle de gastos com lançamento por voz.">
+<title>Din</title>
+<meta name="description" content="Din: controle de gastos com lançamento por voz.">
 <meta name="theme-color" content="#F5F6F4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0F0D" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
@@ -1347,7 +1347,7 @@ function renderAjustes(){
     <label class="field"><span class="label">Tipo de renda</span><select id="modoSel"><option value="">Descobrir sozinho</option><option value="fixo" ${C.modo==="fixo"?"selected":""}>Salário fixo</option><option value="dia" ${C.modo==="dia"?"selected":""}>Ganho por dia (Uber, entregas, bicos)</option><option value="ambos" ${C.modo==="ambos"?"selected":""}>Os dois</option></select></label>
     <label class="field"><span class="label">Dias de trabalho por semana (para a meta diária)</span><select id="diasSemana">${[3,4,5,6,7].map(n=>`<option value="${n}" ${+C.diasSemana===n?"selected":""}>${n} dias</option>`).join("")}</select></label></div>`;
   h+=`<div class="sec">Dados</div><div class="set"><div class="sw"><div><h3>Apagar todos os dados</h3><p class="hint">Remove lançamentos, cartões, contas e metas${store.kind==="db"?" da sua conta":" deste aparelho"}. Salve uma cópia antes.</p></div><button class="btn small ghost danger" id="apagarTudo">Apagar</button></div></div>
-    <p class="hint" style="text-align:center">Caderneta ${VERSAO_APP}${APP?` · <a href="privacidade.html" style="color:inherit">Política de privacidade</a>`:""}</p>`;
+    <p class="hint" style="text-align:center">Din ${VERSAO_APP}${APP?` · <a href="privacidade.html" style="color:inherit">Política de privacidade</a>`:""}</p>`;
   $("#p-ajustes").innerHTML=h;
 }
 function catForm(c){ const n=!c; c=c||{}; const cores=CORES_X; return `<form class="add-form" id="catForm" data-id="${esc(c.id||"")}" style="padding:0"><div class="fields">
@@ -1422,7 +1422,7 @@ function lerOnb(){
 function drawOnb(){
   const o=ui.onb, steps=`<div class="steps">${[1,2,3].map(i=>`<i class="${i<=o.step?"on":""}"></i>`).join("")}</div>`;
   let h="";
-  if(o.step===1) h=`${steps}<h2>Bem-vindo à Caderneta</h2><p class="hint">Três perguntas rápidas para o app já começar organizado. Dá para mudar tudo depois.</p>
+  if(o.step===1) h=`${steps}<h2>Bem-vindo ao Din</h2><p class="hint">Três perguntas rápidas para o app já começar organizado. Dá para mudar tudo depois.</p>
     <b>Como você ganha seu dinheiro?</b>
     ${[["fixo","Salário fixo","Recebo um valor todo mês"],["dia","Ganho por dia","Uber, 99, entregas, vendas, bicos"],["ambos","Os dois","Tenho salário e faço extras"]].map(([k,t,s])=>`<button class="opt" data-obmodo="${k}" aria-pressed="${o.modo===k}"><strong>${t}</strong><span>${s}</span></button>`).join("")}
     ${o.modo==="fixo"||o.modo==="ambos"?`<label class="field"><span class="label">Quanto você recebe por mês? (R$)</span><input id="obSal" inputmode="decimal" placeholder="3.000,00" value="${esc(o.salario)}"></label>`:""}
@@ -1498,22 +1498,22 @@ async function baixar(nome,data,tipo){
   else { try{ const url=URL.createObjectURL(new Blob([data],{type:tipo})); const a=document.createElement("a"); a.href=url; a.download=nome; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); return true; }catch(_){} }
   try{ await navigator.clipboard.writeText(data.replace(/^﻿/,"")); toast("Não deu para baixar aqui, então copiei o conteúdo."); return true; }catch(_){ toast("Não foi possível salvar aqui."); return false; }
 }
-const backupJSON=()=>JSON.stringify({app:"caderneta",formato:1,versao:VERSAO_APP,exportado:new Date().toISOString(),config:cfg(),gastos:state.gastos});
-const backupNome=()=>`caderneta-copia-${hojeISO()}.json`;
+const backupJSON=()=>JSON.stringify({app:"din",formato:1,versao:VERSAO_APP,exportado:new Date().toISOString(),config:cfg(),gastos:state.gastos});
+const backupNome=()=>`din-copia-${hojeISO()}.json`;
 async function salvarBackup(){ if(await baixar(backupNome(),backupJSON(),"application/json")){ try{localStorage.setItem("caderneta-ultimo-backup",hojeISO())}catch(_){} toast("Cópia salva"); render(); } }
 async function enviarBackup(){
-  try{ const f=new File([backupJSON()],backupNome(),{type:"application/json"}); if(navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:"Cópia da Caderneta"}); try{localStorage.setItem("caderneta-ultimo-backup",hojeISO())}catch(_){} render(); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
+  try{ const f=new File([backupJSON()],backupNome(),{type:"application/json"}); if(navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:"Cópia do Din"}); try{localStorage.setItem("caderneta-ultimo-backup",hojeISO())}catch(_){} render(); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
   salvarBackup();
 }
 function lerArquivoBackup(file){
   const fr=new FileReader();
   fr.onload=()=>{ try{
       const d=JSON.parse(String(fr.result||""));
-      if(!d||d.app!=="caderneta"||typeof d.config!=="object"||!Array.isArray(d.gastos)) throw 0;
+      if(!d||!["din","caderneta"].includes(d.app)||typeof d.config!=="object"||!Array.isArray(d.gastos)) throw 0;
       const gastos=d.gastos.filter(g=>g&&typeof g==="object"&&typeof g.id==="string"&&g.id&&typeof g.data==="string");
       ui.restore={config:d.config||{},gastos,quando:d.exportado?new Date(d.exportado).toLocaleDateString("pt-BR"):"data desconhecida"};
       tab="ajustes"; render();
-    }catch(_){ toast("Esse arquivo não é uma cópia da Caderneta."); } };
+    }catch(_){ toast("Esse arquivo não é uma cópia do Din."); } };
   fr.onerror=()=>toast("Não deu para abrir o arquivo.");
   fr.readAsText(file);
 }
@@ -1531,7 +1531,7 @@ function csv(itens){
 async function exportar(modo){
   const itens=modo==="mes"?doMes(curKey()):ITENS.slice();
   if(!itens.length){ toast("Nada para exportar"); return; }
-  if(await baixar(modo==="mes"?`caderneta-${curKey()}.csv`:"caderneta-completa.csv",csv(itens),"text/csv;charset=utf-8")) toast("Planilha pronta");
+  if(await baixar(modo==="mes"?`din-${curKey()}.csv`:"din-completo.csv",csv(itens),"text/csv;charset=utf-8")) toast("Planilha pronta");
 }
 
 /* ============ eventos ============ */

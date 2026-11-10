@@ -1,6 +1,6 @@
 // Guarda o app no celular para abrir sem internet e avisa contas vencendo.
 // Troque a versão a cada atualização do app.
-const VERSAO = "caderneta-v2";
+const VERSAO = "din-v3";
 const AGENDA = "caderneta-agenda";
 const ARQUIVOS = ["./", "index.html", "manifest.json", "privacidade.html", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(VERSAO).then(c => c.addAll(ARQUIVOS)).then(() => self.skipWaiting())); });
@@ -26,7 +26,7 @@ async function verificarContas() {
     if (dias < 0 || dias > 2) continue;
     const chave = a.id + "@" + h; if (avisados[chave]) continue;
     const quando = dias === 0 ? "vence hoje" : dias === 1 ? "vence amanhã" : "vence em 2 dias";
-    await self.registration.showNotification(a.titulo + " " + quando, { body: "R$ " + brl(a.valor) + " · toque para abrir a Caderneta", icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: a.id });
+    await self.registration.showNotification(a.titulo + " " + quando, { body: "R$ " + brl(a.valor) + " · toque para abrir o Din", icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: a.id });
     avisados[chave] = 1;
   }
   for (const k of Object.keys(avisados)) if (k.split("@")[1] < iso(new Date(Date.now() - 7 * 864e5))) delete avisados[k];
