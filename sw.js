@@ -1,12 +1,18 @@
 // Guarda o app no celular para abrir sem internet e avisa contas vencendo.
 // Troque a versão a cada atualização do app.
-const VERSAO = "din-v3";
+const VERSAO = "din-v6";
 const AGENDA = "caderneta-agenda";
+const CONFIG = "din-config";   // assinatura.json fica num cache próprio, que sobrevive às atualizações
 const ARQUIVOS = ["./", "index.html", "manifest.json", "privacidade.html", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(VERSAO).then(c => c.addAll(ARQUIVOS)).then(() => self.skipWaiting())); });
-self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSAO && k !== AGENDA).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSAO && k !== AGENDA && k !== CONFIG).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", e => {
   const req = e.request; if (req.method !== "GET") return;
+  if (new URL(req.url).pathname.endsWith("/assinatura.json")) {   // sempre a versão nova; sem internet, a última que veio
+    e.respondWith(fetch(req, { cache: "no-store" }).then(r => { if (r.ok) { const cp = r.clone(); caches.open(CONFIG).then(c => c.put("assinatura.json", cp)); } return r; })
+      .catch(() => caches.open(CONFIG).then(c => c.match("assinatura.json")).then(hit => hit || Response.error())));
+    return;
+  }
   if (req.mode === "navigate") { e.respondWith(fetch(req).then(r => { const cp = r.clone(); caches.open(VERSAO).then(c => c.put("index.html", cp)); return r; }).catch(() => caches.match("index.html"))); return; }
   e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => { if (r.ok && (new URL(req.url).origin === location.origin || req.url.includes("fonts.g"))) { const cp = r.clone(); caches.open(VERSAO).then(c => c.put(req, cp)); } return r; }).catch(() => hit)));
 });
